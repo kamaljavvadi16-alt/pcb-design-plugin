@@ -1,0 +1,7 @@
+# Force LF on scripts so shell scripts run on macOS/Linux (and git-bash) after checkout on any OS.
+*.sh   text eol=lf
+*.py   text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+# freerouting.jar is binary — never line-ending-convert it.
+*.jar  binary
