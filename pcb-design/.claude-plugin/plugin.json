@@ -5,5 +5,7 @@
   "author": {
     "name": "Kamal"
   },
+  "homepage": "https://github.com/kamaljavvadi16-alt/pcb-design-plugin",
+  "repository": "https://github.com/kamaljavvadi16-alt/pcb-design-plugin",
   "keywords": ["pcb", "kicad", "hardware", "eda", "jlcpcb", "freerouting", "dfm", "schematic", "routing"]
 }

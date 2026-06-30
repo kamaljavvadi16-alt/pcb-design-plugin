@@ -10,18 +10,18 @@ boards.
 In Claude Code:
 
 ```text
-/plugin marketplace add <your-github-user>/pcb-design-plugin
+/plugin marketplace add kamaljavvadi16-alt/pcb-design-plugin
 /plugin install pcb-design@pcb-tools
 ```
 
-`<your-github-user>/pcb-design-plugin` is this repo. `pcb-tools` is the marketplace name (the `name`
+`kamaljavvadi16-alt/pcb-design-plugin` is this repo. `pcb-tools` is the marketplace name (the `name`
 field in `.claude-plugin/marketplace.json`). After installing, invoke it with **`/pcb-design`** — or
 just ask Claude to design a PCB.
 
 You can also try it from a local clone:
 
 ```text
-git clone https://github.com/<your-github-user>/pcb-design-plugin
+git clone https://github.com/kamaljavvadi16-alt/pcb-design-plugin
 # in Claude Code:
 /plugin marketplace add ./pcb-design-plugin
 /plugin install pcb-design@pcb-tools
