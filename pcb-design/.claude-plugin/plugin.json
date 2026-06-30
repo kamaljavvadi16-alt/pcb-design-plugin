@@ -1,0 +1,9 @@
+{
+  "name": "pcb-design",
+  "version": "1.0.0",
+  "description": "Code-first KiCad PCB design end-to-end: describe a board in one Python spec, generate the .kicad_pcb layout, autoroute with the bundled freerouting, run JLCPCB DFM gate checks, and export gerbers/drill/BOM/CPL. 2- and 4-layer.",
+  "author": {
+    "name": "Kamal"
+  },
+  "keywords": ["pcb", "kicad", "hardware", "eda", "jlcpcb", "freerouting", "dfm", "schematic", "routing"]
+}

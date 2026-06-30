@@ -1,0 +1,14 @@
+# python bytecode
+__pycache__/
+*.pyc
+
+# per-board generated artifacts (should never live in the plugin itself)
+route.dsn
+route.ses
+drc.rpt
+board_spec.py
+*.kicad_pcb
+*.kicad_pro
+*.kicad_prl
+*.kicad_sch
+fab/
