@@ -27,6 +27,24 @@ git clone https://github.com/kamaljavvadi16-alt/pcb-design-plugin
 /plugin install pcb-design@pcb-tools
 ```
 
+### No `/plugin` command? Install as a plain skill
+
+Some Claude surfaces (older Claude Code versions, or certain IDE/remote/SDK-hosted sessions) don't
+expose `/plugin`. Skills also load from a plain folder, so install it manually — no marketplace needed:
+
+```bash
+# macOS / Linux
+git clone https://github.com/kamaljavvadi16-alt/pcb-design-plugin
+cp -r pcb-design-plugin/pcb-design/skills/pcb-design ~/.claude/skills/pcb-design
+```
+```powershell
+# Windows (PowerShell)
+git clone https://github.com/kamaljavvadi16-alt/pcb-design-plugin
+Copy-Item -Recurse pcb-design-plugin\pcb-design\skills\pcb-design "$env:USERPROFILE\.claude\skills\pcb-design"
+```
+Restart Claude Code, then invoke with `/pcb-design`. (If `/plugin` *is* available, prefer the
+marketplace install above — it gives you clean updates.)
+
 ## Prerequisites
 
 The plugin bundles everything except the heavy native tools. After installing, run the built-in
