@@ -32,19 +32,31 @@ and a battery of checks proves the board is fab-ready before any money is spent.
    `board_spec.example.py` → `board_spec.py`, and fill it: dimensions, layer count, nets, footprints
    (with pad→net maps), placement coordinates, pours, keepouts, silk. (Read `reference/design-rules.md`
    first for power/RF boards.)
-2. **Placement** — `python gen_pcb.py` then `<kicad_python> check_overlap.py`. Iterate until **0
-   courtyard overlaps, 0 off-board parts**, and the ratsnest/net count looks right. Hand-place the
-   critical analog/switching parts; don't let the autorouter decide loop geometry.
+2. **Placement** — `python gen_pcb.py`, then `<kicad_python> check_overlap.py` and
+   `check_handroutes.py`. Iterate until **0 courtyard overlaps, 0 NPTH-hole-in-courtyard, 0 off-board
+   parts**, and the ratsnest/net count looks right. Hand-place the critical analog/switching parts;
+   don't let the autorouter decide loop geometry. These gates cost ~1 s and catch the bugs that
+   otherwise surface 30 minutes into an autoroute.
 3. **Route + finish** — `bash build_routed.sh`. This sets net classes, generates, flips back-side
    parts, exports DSN, autoroutes (freerouting, **auto-retries** because it's stochastic), imports the
    result, adds GND pours + stitching, cleans silk, and runs DRC — looping until **0 violations / 0
    unconnected**. On success it exports the fab package.
-4. **DFM gates** — `<kicad_python> check_silk.py`, `check_tht_smd.py`, `check_route.py`,
-   `check_bends.py`. Resolve every genuine flag. See `reference/dfm-rules.md` for what is a real defect
-   vs a JLCPCB false-positive you should NOT chase.
+4. **DFM gates** — `<kicad_python> check_jlc_dfm.py` (**the important one**), then `check_silk.py`,
+   `check_tht_smd.py`, `check_route.py`, `check_bends.py`. Resolve every genuine flag. See
+   `reference/dfm-rules.md` for what is a real defect vs a fab false-positive you should NOT chase.
+
+   > **`DRC: 0/0` does not mean manufacturable.** KiCad's DRC does not police drill-to-drill spacing,
+   > via annular ring, or the drilled hole's clearance to pad copper. `check_jlc_dfm.py` covers those
+   > and gates the fab export, so a package that looks finished can't carry a known defect.
 5. **Fab gate (before ordering)** — work through `reference/fab-gate-checklist.md`: verify any custom
-   or uncertain footprint pad-map **1:1 against the datasheet**, do the paper print test, archive the
-   exact gerber zip. Nothing is ordered before this passes.
+   or uncertain footprint pad-map **1:1 against the datasheet**, do the paper print test, check every
+   rotation in the fab's *interactive* CPL preview, and archive the exact gerber zip. Nothing is
+   ordered before this passes.
+
+   > **Ship the CPL with the footprint anchor unmodified.** A part body legitimately overhangs its
+   > pads (module antenna ends, connector shells), so a preview can make a correct placement *look*
+   > offset. Hand-"correcting" it moves the real pick-and-place off the pads. See `dfm-rules.md`.
+   > **A CPL/BOM change needs no re-route** — regenerate and re-upload in seconds.
 
 ## Scaffolding a new board (concrete)
 The toolchain lives in the **`scripts/` folder next to this SKILL.md**. Copy it into your board's

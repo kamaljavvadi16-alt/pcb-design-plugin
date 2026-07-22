@@ -111,7 +111,17 @@ FLIP_TO_BACK = []                  # refs (and silk-only logos) to move to the b
 STRAGGLERS = []
 
 # ===== DFM =====
-THT_SMD_MIN = 3.0                  # THT pad must be >= this (mm) from any SMD pad (advisory < 3, critical < 0.5)
+THT_SMD_MIN = 3.0                  # THT pad -> SMD pad, for THT parts the FAB PLACES (in the CPL)
+THT_HAND_MIN = 1.5                 # ...for THT parts YOU hand-fit after delivery (iron access only)
+# --- fab-house DFM limits (check_jlc_dfm.py). KiCad's DRC checks NONE of these. ---
+MIN_HOLE_GAP = 0.30                # hole edge -> hole edge (vias + drilled pads)
+MIN_ANNULAR = 0.20                 # (via pad - via drill) / 2
+MIN_HOLE_TO_PAD = 0.20             # via DRILL edge -> pad copper, ANY net (drill reg + solder wicking)
+EP_MIN_PADS = 6                    # a via inside a pad is OK only if the footprint has >= this many
+                                   # pads (i.e. it is an IC thermal EP, not a 2-pad chip land).
+                                   # Pad AREA cannot tell them apart: a QFN EP can be 1.49mm2 and an
+                                   # 0805 land 1.45mm2.
+ACUTE_DEG = 80.0                   # flag trace corners sharper than this
 
 # ===== BOM / CPL (JLCPCB assembly) =====
 LCSC = {}                          # per-ref LCSC#, e.g. {"U1": "C6186"}
