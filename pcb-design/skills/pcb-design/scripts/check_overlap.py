@@ -16,9 +16,16 @@ import config
 spec = config.spec
 P = sys.argv[1] if len(sys.argv) > 1 else config.BOARD_PCB
 OX, OY = spec.ORIGIN
-W, H = spec.W, spec.H
 b = pcbnew.LoadBoard(P)
 mm = pcbnew.ToMM
+# Board size is DERIVED from Edge.Cuts, not taken from the spec. If the outline is edited (or the
+# spec is copied to a new revision and W/H not updated) a hardcoded size silently compares parts
+# against the WRONG board and the off-board test can never fire near the real edge.
+_e = b.GetBoardEdgesBoundingBox()
+W, H = mm(_e.GetWidth()), mm(_e.GetHeight())
+if abs(W - getattr(spec, "W", W)) > 0.2 or abs(H - getattr(spec, "H", H)) > 0.2:
+    print(f"note: Edge.Cuts is {W:.2f} x {H:.2f} mm but the spec says "
+          f"{getattr(spec, 'W', 0):.2f} x {getattr(spec, 'H', 0):.2f} -- using Edge.Cuts.")
 
 
 def court_poly(fp):
@@ -71,6 +78,29 @@ for a, c, ar in sorted(hits, key=lambda t: -t[2]):
     print(f"   ! {a:5} <-> {c:5}  overlap ~{ar:.2f} mm^2")
 if nocourt:
     print(f"(no-courtyard fps, bbox-only: {', '.join(sorted(nocourt))})")
+
+# ---- NPTH holes vs courtyards -------------------------------------------------------------
+# Mounting holes are usually bare NPTH footprints with `allow_missing_courtyard` and NO courtyard,
+# so the pairwise test above SKIPS them entirely -- they are invisible as obstacles. KiCad only
+# catches the collision at route time as `npth_inside_courtyard`, i.e. after a full autoroute.
+# Model each NPTH pad as a disc of its drill radius and test it against every courtyard.
+npth = []
+for fp in fps:
+    for p in fp.Pads():
+        if p.GetAttribute() == pcbnew.PAD_ATTRIB_NPTH and p.GetDrillSizeX() > 0:
+            q = p.GetPosition()
+            npth.append((fp.GetReference(), mm(q.x), mm(q.y), mm(p.GetDrillSizeX()) / 2))
+nhits = []
+for ref, hx, hy, r in npth:
+    for oref, poly in polys.items():
+        if oref == ref:
+            continue
+        if pcbnew.SHAPE_POLY_SET(poly).Collide(
+                pcbnew.VECTOR2I(pcbnew.FromMM(hx), pcbnew.FromMM(hy)), pcbnew.FromMM(r)):
+            nhits.append((ref, oref))
+print(f"\nNPTH hole inside a courtyard: {len(nhits)}")
+for ref, oref in nhits:
+    print(f"   ! {ref:5} hole <-> {oref:5} courtyard")
 
 print("\nParts past board edge (>0.5mm):")
 out = False

@@ -72,7 +72,16 @@ a POSIX shell (git-bash on Windows). `config.py` auto-detects KiCad; override wi
 **Checks (read-only gates; each takes an optional board-path arg)**
 - `check_overlap.py` — courtyard overlaps + off-board parts + ratsnest/net sanity (placement gate;
   non-zero exit on overlaps).
-- `check_tht_smd.py` — THT↔SMD pad spacing (`THT_SMD_MIN`; non-zero exit on critical <0.5 mm).
+- `check_tht_smd.py` — THT↔SMD pad spacing, **CPL-aware**: `THT_SMD_MIN` (3.0) applies only to THT
+  parts the fab PLACES; hand-fitted parts get `THT_HAND_MIN` (1.5); 0.5 mm is the hard floor.
+  Falls back to the strict rule (and says so) if no CPL exists.
+- `check_jlc_dfm.py` — **fab-house DFM gate for what KiCad's DRC does NOT check**: drill-to-drill
+  spacing, via annular ring, via-copper-to-pad across nets, via-DRILL-to-pad copper (any net),
+  copper-to-edge, acute corners. Non-zero exit on any DANGER; `build_routed.sh` gates the fab
+  export on it. A board can be DRC 0/0 and still fail this.
+- `check_handroutes.py` — validates `spec.SEGMENTS`/`spec.VIAS`. Those are coordinate-keyed and
+  do NOT follow the parts they serve, so moving a footprint can leave a backbone shorting a pad
+  on every routing attempt. ~1 s instead of a routing round.
 - `check_silk.py` — trustworthy silk DFM gate (PASS/ISSUES; non-zero exit on issues).
 - `check_route.py` — tracks per layer (GND-plane layer must be 0), power-net length+vias, ratsnest.
 - `check_bends.py` — flags right-angle/acute trace bends.
@@ -86,6 +95,8 @@ python check_prereqs.py                   # 0. verify KiCad + Java + freerouting
 cp board_spec.example.py board_spec.py    # edit for your board
 python config.py                          # verify KiCad + freerouting found
 python gen_pcb.py && "<kicad_python>" check_overlap.py   # placement loop (0 overlaps)
+"<kicad_python>" check_handroutes.py                     # stale/colliding hand-routes
+"<kicad_python>" check_jlc_dfm.py                        # fab DFM (DRC does not cover this)
 bash build_routed.sh                      # runs the preflight, then route -> DFM -> fab
 ```
 
