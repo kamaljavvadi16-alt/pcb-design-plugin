@@ -61,3 +61,33 @@ fallback before starting the next. Commit the exact gerber zip you ordered.
 3. Footprint must match the physical part (paper test).
 4. Hand-route switching/analog loops; autoroute only the rest.
 5. Verify uncertain footprint pad-maps against the datasheet before ordering.
+
+## Branching a board revision: geometry is the thing that goes stale
+Copying a board directory to start a new revision is cheap; the bugs it creates are not. Board
+dimensions and keep-out maps get hardcoded into helper scripts — outline W/H, notch rectangles,
+antenna keep-outs, straggler-router bounds, hand-routed segment coordinates. Every one of those
+silently mis-maps the new board, and **none of them fails until ~30 minutes into an autoroute.**
+
+Rules that prevent the whole class:
+- **Derive, never hardcode.** Board size from `Edge.Cuts`; keep-outs from the spec that draws them.
+- **Hand-routed `SEGMENTS`/`VIAS` are coordinate-keyed and do NOT follow parts.** Gate them
+  (`check_handroutes.py`) so a stale backbone is a 1-second failure, not a routing round.
+- **Any pass that ADDS copper must run every geometric check itself**, regardless of where it sits
+  in the pipeline. A late pass cannot rely on earlier passes having cleaned up — they ran before it.
+
+## When the autorouter "can't" route something, check whether it is possible
+Repeated failures on one net are often geometry, not effort. A power-class track leaving a
+fine-pitch pad is the classic case: a 0.6 mm track on a 0.28 mm pad at 0.5 mm pitch leaves 0.06 mm
+to the neighbour against a 0.2 mm rule — **no effort setting will ever route it.** Fixes:
+- taper the escape (narrow until clear of the neighbour, then widen), or
+- centre the escape **between two pads of the same net** (doubles the clearance for free), or
+- pre-place the connection so the router works around it instead of racing it.
+
+Pre-place anything the router keeps losing. Building a connection *after* the router has run means
+competing for a corridor it already owns — that shows up as an intermittent "blocked" straggler.
+
+## Diagnose with a histogram, not the last attempt
+Autorouting is stochastic, so the failing net differs run to run and the final report describes only
+the last attempt. Append each attempt's failures to a log and count them: the chronic offender is
+the one that needs a design change; the singletons are noise. Chasing the last attempt's list means
+fixing a different "random" net every round while the real blocker survives untouched.

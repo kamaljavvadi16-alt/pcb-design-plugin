@@ -26,7 +26,13 @@ A wrong pad-map passes DRC, passes DFM, and only fails when the assembled board 
 
 ## 4. DFM clean
 - [ ] DRC: 0 violations, 0 unconnected (build log).
+- [ ] **`check_jlc_dfm.py` PASS.** DRC alone is NOT sufficient — it does not police drill-to-drill
+      spacing, annular ring or via-hole-to-pad. A 0/0 board has shipped with real fab DANGERs.
+- [ ] `check_handroutes.py` PASS (hand-routed backbones still land on their own nets).
+- [ ] `check_overlap.py`: 0 courtyard overlaps **and** 0 NPTH-hole-inside-courtyard.
 - [ ] `check_silk.py` PASS; `check_tht_smd.py` no critical (<0.5 mm) gaps; `check_bends.py` no acute.
+- [ ] **Re-ran every gate after the LAST re-route.** Autorouter output is stochastic: a warning can
+      cross into a danger purely because a trace moved (seen: 0.12 mm → 0.01 mm mask sliver).
 - [ ] Uploaded the gerber zip to JLCPCB's online DFM; every genuine danger resolved; remaining flags
       confirmed as false-positives (`dfm-rules.md` §B).
 - [ ] **4-layer:** the online DFM reads "PCB layers: 4" (inner layers present in the gerbers).
@@ -35,8 +41,11 @@ A wrong pad-map passes DRC, passes DFM, and only fails when the assembled board 
 - [ ] Gerber zip contains all expected layers + drill + `.gbrjob` (inner copper for 4-layer).
 - [ ] BOM: every assembled part has a value+package; LCSC# assigned or to be matched in JLC's tool;
       hand-soldered/THT parts correctly excluded.
-- [ ] CPL: every assembled part present; **rotations/polarity checked in JLCPCB's CPL preview**
-      (JLC's 0° reference differs from KiCad's for some parts — LEDs, diodes, polarized caps, ICs).
+- [ ] CPL: every assembled part present; **rotations/polarity checked in the fab's INTERACTIVE CPL
+      preview**, part by part, against the on-board pin-1 silk dots. Not the DFM report — it never
+      names the failing component.
+- [ ] CPL X/Y equals the footprint anchor (**no hand-entered offsets**); anchor equals the pad
+      centroid on symmetric parts. A body that overhangs its pads is normal, not an offset.
 - [ ] Parts in stock (re-check live stock for any marginal part; have an alternate LCSC# ready).
 
 ## 6. Archive
@@ -47,6 +56,10 @@ A wrong pad-map passes DRC, passes DFM, and only fails when the assembled board 
 ## Order settings (JLCPCB)
 Layers (2/4) · 1.6 mm · 1 oz · HASL or ENIG · qty/colour. PCBA: economic vs standard assembly,
 Basic vs Extended parts confirmed, CPL preview checked.
+
+> **A CPL/BOM change needs NO re-route** — they are generated from the board and touch no copper.
+> Regenerate, re-upload, re-check: seconds, not a routing round. Re-routing for a CPL edit also
+> re-randomises the autorouter and spawns fresh route-dependent DFM issues to chase.
 
 > Carry-forward cautions belong in the board's own context notes: list any pad-map you verified "by
 > reasoning" rather than from an unambiguous datasheet drawing, and eyeball those again at this gate.
